@@ -19,6 +19,8 @@ class UserController extends Controller
             'image'     =>  'required',
 
         ]);
+        // $image = implode(',', $request->image);
+
 
         $data = DB::table('users')->insert([
             'name'      => $request->name,
@@ -30,18 +32,21 @@ class UserController extends Controller
         $Userid = DB::getPdo()->lastInsertId();
 
         $documents = $request->allFiles()["image"];
+        $array = [];
         foreach ($documents as $key => $file) {
             $path = public_path() . '/images/store';
 
             $imageName = date('dmyhis') . 'image.' . $file->getClientOriginalExtension();
             //dd( $imageName);
             $file->move($path, $imageName);
-            $data = DB::table('user_photos')->insert([
-                'user_id'      => $Userid,
-                'image'             => url('/public') . '/images/document/' . $imageName,
+            $imageName = url('/public') . '/images/document/' . $imageName;
 
-            ]);
+            array_push($array, $imageName);
         }
+        $image = implode(', ', $array);
+        DB::table('users')
+            ->where('id', $Userid)
+            ->update(array('image' => $image));
         return redirect()->back()->with("success", "Data successfully Inserted.");
     }
 }
